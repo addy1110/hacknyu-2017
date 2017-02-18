@@ -14,4 +14,4 @@ var orderModel = Schema({
 
 });
 
-module.exports = mongoose.model('order', orderModel);
+module.exports = mongoose.model('Order', orderModel);
