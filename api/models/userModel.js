@@ -5,7 +5,11 @@ var mongoose = require('mongoose') ,
     Schema = mongoose.Schema;
 
 var userModel = Schema({
-    _id : String
+    _id : String,
+    session: {
+        _id: String,
+        current_stage: String
+    }
 });
 
 module.exports = mongoose.model('User', userModel);

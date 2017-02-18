@@ -8,10 +8,10 @@ var bodyParser = require('body-parser');
 // MongoDB
 var mongoose = require('mongoose');
 var db = mongoose.connect('mongodb://db:27017/yumyumbot');
+mongoose.Promise = Promise;
 
 // Models
 var Color = require('./models/colorModel');
-
 
 // Routers
 var index = require('./routes/index');
@@ -47,6 +47,9 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
+
+  console.log(err.stack);
+
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
