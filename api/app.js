@@ -5,9 +5,19 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
+// MongoDB
+var mongoose = require('mongoose');
+var db = mongoose.connect('mongodb://db:27017/yumyumbot');
+
+// Models
+var Color = require('./models/colorModel');
+
+
+// Routers
 var index = require('./routes/index');
 var users = require('./routes/users');
 var webhookFB = require('./routes/webhook_fb');
+var mongoapi = require('./routes/mongoapi')(Color);
 
 var app = express();
 
@@ -26,6 +36,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', index);
 app.use('/users', users);
 app.use('/webhook/fb/', webhookFB);
+app.use('/mongo/', mongoapi);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
