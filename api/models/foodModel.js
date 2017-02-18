@@ -15,7 +15,6 @@ var foodModel = Schema({
 });
 module.exports = mongoose.model('Food', foodModel);
 
-/*
 var pizza = new Food(
     {
         _id: 11001,
@@ -30,7 +29,7 @@ var chikenTikka = new Food(
     {
         _id: 110002,
         name: 'Chicken Tikka Masala',
-        desc: 'Boneless chicken marinated in herbs and spices, barbecued. Cooked with cream and almonds.'
+        desc: 'Boneless chicken marinated in herbs and spices, barbecued. Cooked with cream and almonds.',
         restaurant: 'Bombay Xpress',
         img: 'http://www.seriouseats.com/images/20120529-the-food-lab-chicken-tikka-masala-18.jpg',
         price: 12.95
@@ -47,7 +46,7 @@ var malaiKofta = new Food({
     price: 11.95
 });
 
-var ChickenParmigiana = new Food({
+var chickenParmigiana = new Food({
 
     _id: 110004 ,
     name: 'Chicken Parmigiana',
@@ -97,7 +96,7 @@ var santaFeVeggieQuesadilla = new Food({
     desc: 'Cheddar cheese, mozzarella cheese, tomato, green peppers, black bean and red onion. Served with sour cream and salsa in your choice of tortilla.',
     restaurant: 'Burger UrWay Myrtle Ave',
     img: 'http://cookingwithjack.com/wp-content/uploads/2015/08/spinach-cheese-quesadillapp_w689_h459.jpg' ,
-    price:
+    price: 6.89
 });
 
 
@@ -121,13 +120,67 @@ var seafoodCombinationSpecial = new Food({
     img: 'http://www.seriouseats.com/assets_c/2014/05/20140428-panfried-noodles-seafood-18-thumb-625xauto-400119.jpg',
     price: 7.25
 });
-*/
 
 
 
-pizza.save(function (err, pizza) {
+pizza.save(function (err, item) {
     if (err) return console.error(err);
-    console.log("successful");
+    console.log("pizza successful");
 });
+
+chikenTikka.save(function (err, item) {
+    if (err) return console.error(err);
+    console.log("chikenTikka successful");
+});
+
+malaiKofta.save(function (err, item) {
+    if (err) return console.error(err);
+    console.log("malaiKofta successful");
+});
+
+chickenParmigiana.save(function (err, item) {
+    if (err) return console.error(err);
+    console.log("chickenParmigiana successful");
+});
+
+shrimpYaki.save(function (err, item) {
+    if (err) return console.error(err);
+    console.log("shrimpYaki successful");
+});
+
+salmonTempuraRoll.save(function (err, item) {
+    if (err) return console.error(err);
+    console.log("salmonTempuraRoll successful");
+});
+
+baconCheeseSteakburger.save(function (err, item) {
+    if (err) return console.error(err);
+    console.log("baconCheeseSteakburger successful");
+});
+
+santaFeVeggieQuesadilla.save(function (err, item) {
+    if (err) return console.error(err);
+    console.log("santaFeVeggieQuesadilla successful");
+});
+
+friedPorkDumplings.save(function (err, item) {
+    if (err) return console.error(err);
+    console.log("friedPorkDumplings successful");
+});
+
+seafoodCombinationSpecial.save(function (err, item) {
+    if (err) return console.error(err);
+    console.log("seafoodCombinationSpecial successful");
+});
+
+
+
+
+
+
+
+
+
+
 
 
