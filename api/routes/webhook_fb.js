@@ -5,7 +5,10 @@ const
     express = require('express'),
     router = express.Router(),
     config = require('config'),
-    request = require('request');
+    request = require('request'),
+    uuidV4 = require('uuid/v4');
+
+var User = require('../models/userModel');
 
 // App Secret can be retrieved from the App Dashboard
 const APP_SECRET = (process.env.MESSENGER_APP_SECRET) ?
@@ -51,9 +54,11 @@ router.post('/', (req, res) => {
 
     // Make sure this is a page subscription
     if (data.object == 'page') {
+
         // Iterate over each entry
         // There may be multiple if batched
         data.entry.forEach((pageEntry) => {
+
             var pageID = pageEntry.id;
             var timeOfEvent = pageEntry.time;
 
@@ -62,7 +67,7 @@ router.post('/', (req, res) => {
                 if(messagingEvent.optin) {
 
                 } else if (messagingEvent.message) {
-                    receivedMessage(messagingEvent)
+                    receivedMessage(messagingEvent);
                 } else {
                     console.log("Webhook received unknown messagingEvent: ", messagingEvent);
                 }
@@ -93,23 +98,34 @@ function receivedMessage(event) {
     var messageAttachments = message.attachments;
     var quickReply = message.quick_reply;
 
-    if (isEcho) {
-        // Just logging message echoes to console
-        console.log("Received echo for message %s and app %d with metadata %s",
-            messageId, appId, metadata);
-        return;
-    } else if (quickReply) {
-        var quickReplyPayload = quickReply.payload;
-        console.log("Quick reply for message %s with payload %s",
-            messageId, quickReplyPayload);
+    // Check User exist or not
+    User.findOne({_id: recipientID}).then((user) => {
+        if(user !== null) {
+           return user;
+        } else {
+           return createUser(recipientID).save();
+        }
+    }).then(user => {
+        // if (isEcho) {
+        //     // Just logging message echoes to console
+        //     console.log("Received echo for message %s and app %d with metadata %s",
+        //         messageId, appId, metadata);
+        //     return;
+        // } else if (quickReply) {
+        //     var quickReplyPayload = quickReply.payload;
+        //     console.log("Quick reply for message %s with payload %s",
+        //         messageId, quickReplyPayload);
+        //
+        //     sendTextMessage(senderID, "Quick reply tapped");
+        //     return;
+        // }
 
-        sendTextMessage(senderID, "Quick reply tapped");
-        return;
-    }
-
-    if (messageText) {
-        sendTextMessage(senderID, messageText);
-    }
+        if (messageText) {
+            sendTextMessage(senderID, messageText);
+        }
+    }).catch(err => {
+        console.log("Error whil checking user and session: "+err);
+    });
 }
 
 function sendTextMessage(recipientId, messageText) {
@@ -151,5 +167,8 @@ function callSendAPI(messageData) {
     });
 }
 
+function createUser(recipientID) {
+    return new User({_id: recipientID, session : {_id: uuidV4(), current_stage: 'input.welcome'}});
+}
 
 module.exports = router;
