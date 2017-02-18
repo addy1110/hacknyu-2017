@@ -1,0 +1,49 @@
+active users
+{
+  {
+    user_id: id,
+    session_id: sessionid,
+    current_stage: input.menu
+  }
+}
+
+users
+{
+  _id: 89u8978709870 (senderid),
+  name: 'Jordan'
+}
+
+orders
+{
+  {
+    _id: (order id),
+    user_id: 89u8978709870 (senderid),
+    "location_id: Delivery location id",
+    f_id : food id,
+    qty : number
+
+  }
+}
+
+Delivery locations
+{
+    {
+      _id: jfklsd,
+      zip:
+      stage:
+      city:
+    }
+}
+
+
+foods
+{
+   {
+    _id: foodid,
+    name: foodname,
+    desc: fooddescription,
+    restaurant: restaurantname,
+    img: image url,
+    price: 10
+    }
+}
