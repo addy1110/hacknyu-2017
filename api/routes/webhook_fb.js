@@ -68,6 +68,8 @@ router.post('/', (req, res) => {
 
                 } else if (messagingEvent.message) {
                     receivedMessage(messagingEvent);
+                } else if (messagingEvent.postback) {
+                    receivedPostback(messagingEvent);
                 } else {
                     console.log("Webhook received unknown messagingEvent: ", messagingEvent);
                 }
@@ -106,19 +108,19 @@ function receivedMessage(event) {
            return createUser(recipientID).save();
         }
     }).then(user => {
-        // if (isEcho) {
-        //     // Just logging message echoes to console
-        //     console.log("Received echo for message %s and app %d with metadata %s",
-        //         messageId, appId, metadata);
-        //     return;
-        // } else if (quickReply) {
-        //     var quickReplyPayload = quickReply.payload;
-        //     console.log("Quick reply for message %s with payload %s",
-        //         messageId, quickReplyPayload);
-        //
-        //     sendTextMessage(senderID, "Quick reply tapped");
-        //     return;
-        // }
+        if (isEcho) {
+            // Just logging message echoes to console
+            console.log("Received echo for message %s and app %d with metadata %s",
+                messageId, appId, metadata);
+            return;
+        } else if (quickReply) {
+            var quickReplyPayload = quickReply.payload;
+            console.log("Quick reply for message %s with payload %s",
+                messageId, quickReplyPayload);
+
+            sendTextMessage(senderID, "Quick reply tapped");
+            return;
+        }
 
         if (messageText) {
             sendTextMessage(senderID, messageText);
@@ -141,6 +143,72 @@ function sendTextMessage(recipientId, messageText) {
 
     callSendAPI(messageData);
 }
+
+function receivedPostback(event) {
+    var senderID = event.sender.id;
+    var recipientID = event.recipient.id;
+    var timeOfPostback = event.timestamp;
+
+    // The 'payload' param is a developer-defined field which is set in a postback
+    // button for Structured Messages.
+    var payload = event.postback.payload;
+
+    switch (payload) {
+        case 'GET_STARTED_BUTTON':
+            sendTextMessage(senderID, "Hello. I am YumYum BOT");
+            sendQuickReply(senderID);
+            break;
+        default:
+            sendTextMessage(senderID, "I could not understand Postback");
+
+    }
+
+    console.log("Received postback for user %d and page %d with payload '%s' " +
+        "at %d", senderID, recipientID, payload, timeOfPostback);
+
+    // When a postback is called, we'll send a message back to the sender to
+    // let them know it was successful
+    // sendTextMessage(senderID, "Postback called");
+}
+
+function sendGifMessage(recipientId) {
+    var messageData = {
+        recipient: {
+            id: recipientId
+        },
+        message: {
+            attachment: {
+                type: "image",
+                payload: {
+                    url: SERVER_URL + "/assets/instagram_logo.gif"
+                }
+            }
+        }
+    };
+
+    callSendAPI(messageData);
+}
+
+function sendQuickReply(recipientId) {
+    var messageData = {
+        recipient: {
+            id: recipientId
+        },
+        message: {
+            text: "Whould you like to order a food?",
+            quick_replies: [
+                {
+                    "content_type":"text",
+                    "title":"Menu",
+                    "payload":"QUICK_REPLY_MENU"
+                }
+            ]
+        }
+    };
+
+    callSendAPI(messageData);
+}
+
 
 function callSendAPI(messageData) {
     request({
@@ -170,5 +238,6 @@ function callSendAPI(messageData) {
 function createUser(recipientID) {
     return new User({_id: recipientID, session : {_id: uuidV4(), current_stage: 'input.welcome'}});
 }
+
 
 module.exports = router;
