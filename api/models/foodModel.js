@@ -15,13 +15,14 @@ var foodModel = Schema({
 });
 module.exports = mongoose.model('Food', foodModel);
 
+/*
 var pizza = new Food(
     {
         _id: 11001,
-        name: 'Pepperoni',
-        desc: 'Premium pepperoni, real cheese made from mozzarella and your choice of crust.',
+        name: 'Veggie Specialty Pizza',
+        desc: 'Broccoli, spinach, mushrooms, onions, peppers, and black olives with real cheese made from mozzarella and your choice of crust.',
         restaurant: 'PAPA JOHNS',
-        img: 'https://www.papajohns.com/static-assets/a/images/web/product/pizzas/std_double_pep-compressed.jpg',
+        img: 'http://www.cicis.com/media/1143/pizza_adven_zestyveggie.png',
         price: 11
     });
 
@@ -39,87 +40,88 @@ var chikenTikka = new Food(
 var malaiKofta = new Food({
 
     _id: 110003,
-    name: ,
+    name: 'Malai Kofta' ,
     desc: 'Vegetable ball cooked with coconut cream sauce.' ,
-    restaurant:,
-    img: ,
-    price:
+    restaurant: 'Bombay Xpress',
+    img: 'https://usercontent2.hubstatic.com/8082401_f1024.jpg',
+    price: 11.95
 });
 
-var  = new Food({
+var ChickenParmigiana = new Food({
 
-    _id: ,
-    name: ,
-    desc: ,
-    restaurant:,
-    img: ,
-    price:
-});
-
-
-var  = new Food({
-
-    _id: ,
-    name: ,
-    desc: ,
-    restaurant:,
-    img: ,
-    price:
+    _id: 110004 ,
+    name: 'Chicken Parmigiana',
+    desc: 'Breaded chicken cutlet, tomato sauce, and mozzarella. Served with your choice of spaghetti, penne or salad.' ,
+    restaurant: 'Pronto Pizza',
+    img: 'http://food.fnr.sndimg.com/content/dam/images/food/fullset/2011/8/4/1/GL0509_chicken-parmigiana_s4x3.jpg.rend.hgtvcom.1280.960.jpeg',
+    price: 8.95
 });
 
 
-var  = new Food({
+var shrimpYaki = new Food({
 
-    _id: ,
-    name: ,
-    desc: ,
-    restaurant:,
-    img: ,
-    price:
+    _id: 110005,
+    name: 'Shrimp Yaki',
+    desc: 'Stir-fried with your choice of udon or soba noodles.',
+    restaurant: 'Sakura Tokyo II',
+    img: 'http://ayearatthetable.com/wp-content/uploads/2012/03/IMG_7689.jpg',
+    price: 6.95
 });
 
 
-var  = new Food({
+var salmonTempuraRoll= new Food({
 
-    _id: ,
-    name: ,
-    desc: ,
-    restaurant:,
-    img: ,
-    price:
-});
-
-var  = new Food({
-
-    _id: ,
-    name: ,
-    desc: ,
-    restaurant:,
-    img: ,
-    price:
+    _id: 110006,
+    name: 'Salmon Tempura Roll',
+    desc: 'Deep fried salmon with avocado, cucumber and caviar (seaweed outside).',
+    restaurant: 'Sakura Tokyo II' ,
+    img: 'http://www.cusushi.com/images/menu04g.jpg',
+    price: 5.50
 });
 
 
-var  = new Food({
+var baconCheeseSteakburger = new Food({
 
-    _id: ,
-    name: ,
-    desc: ,
-    restaurant:,
-    img: ,
+    _id: 110007,
+    name: 'Bacon Cheese Steakburger',
+    desc: '5.4 oz. burger served on choice of bun.',
+    restaurant: 'Burger UrWay Myrtle Ave',
+    img: 'https://s-media-cache-ak0.pinimg.com/236x/f1/01/82/f1018203fa816e3d732e91dcd8c01300.jpg',
+    price: 9.79
+});
+
+var santaFeVeggieQuesadilla = new Food({
+
+    _id: 110008,
+    name: 'Santa Fe Veggie Quesadilla',
+    desc: 'Cheddar cheese, mozzarella cheese, tomato, green peppers, black bean and red onion. Served with sour cream and salsa in your choice of tortilla.',
+    restaurant: 'Burger UrWay Myrtle Ave',
+    img: 'http://cookingwithjack.com/wp-content/uploads/2015/08/spinach-cheese-quesadillapp_w689_h459.jpg' ,
     price:
 });
 
 
-var  = new Food({
+var friedPorkDumplings = new Food({
 
-    _id: ,
-    name: ,
-    desc: ,
-    restaurant:,
-    img: ,
-    price:
+    _id: 110009,
+    name: 'Fried Pork Dumplings',
+    desc: 'Eight Pieces',
+    restaurant: 'Panda Delight',
+    img: 'http://foodforfour.com/wp-content/uploads/2014/08/pan-fried-pork-dumplings.jpg',
+    price: 5.95
 });
+
+
+var seafoodCombinationSpecial = new Food({
+
+    _id: 110010,
+    name: 'Seafood Combination Special',
+    desc: 'Fish, crab stick, jumbo shrimp and scallops.',
+    restaurant: 'Panda Delight',
+    img: 'http://www.seriouseats.com/assets_c/2014/05/20140428-panfried-noodles-seafood-18-thumb-625xauto-400119.jpg',
+    price: 7.25
+});
+*/
 
 
 
