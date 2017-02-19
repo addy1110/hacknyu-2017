@@ -5,10 +5,10 @@ var mongoose = require('mongoose') ,
     Schema = mongoose.Schema;
 
 var deliveryModel = Schema({
-    id:string,
-    zip:number,
-    city:string,
-    state:string
+    id: String,
+    zip: Number,
+    city: String,
+    state: String
 });
 
 module.exports = mongoose.model('Delivery', deliveryModel);

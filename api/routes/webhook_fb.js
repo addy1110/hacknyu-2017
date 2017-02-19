@@ -12,6 +12,9 @@ const
 
 var User = require('../models/userModel');
 var Food = require('../models/foodModel');
+var deliveryLocation = require('../models/deliveryModel');
+var userOrder = require('../models/orderModel');
+
 
 // App Secret can be retrieved from the App Dashboard
 const APP_SECRET = (process.env.MESSENGER_APP_SECRET) ?
@@ -299,6 +302,56 @@ function sendGifMessage(recipientId) {
     };
 
     callSendAPI(messageData);
+}
+
+function updateAddress(recipientId, address){
+    var location = new deliveryLocation({
+        id: recipientId,
+        zip: address.zip,
+        city: address.city,
+        state: address.state
+    });
+
+    location.save(function (err, item) {
+        if (err) return console.error(err);
+        console.log("address inserted successfully");
+    });
+
+    //send confirmation to user
+}
+
+function placeOrder(recipientId, order){
+    var myOrder = new userOrder({
+        _id: 'orderId',
+        userId: recipientId,
+        foodId: order.foodId,
+        qty: order.qty,
+        total: order.foodId.price * (order.qty)
+    });
+
+    myOrder.save(function (err, item) {
+        if (err) return console.error(err);
+        console.log("Order placed successfully");
+    });
+
+    //send confirmation to user
+}
+
+function updateUserStage(recipientId, sessionId, currentUserStage){
+    var userStage = new User({
+        _id : recipientId,
+        session: {
+            _id: sessionId,
+            currentStage: currentUserStage
+        }
+    });
+
+    userStage.save(function (err, item) {
+        if (err) return console.error(err);
+        console.log("User Stage successfully updated");
+    });
+
+    //post updatetion if needed
 }
 
 function sendQuickReply(recipientId) {
