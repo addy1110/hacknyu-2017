@@ -177,11 +177,12 @@ function handleActions(senderID, reply, action){
             sendTextMessage(senderID, reply);
             break;
         case 'input.location':
-            // sendTextMessage(senderID, reply);
-            // showMenu(senderID);
+            sendTextMessage(senderID, reply);
+            showMenu(senderID);
             break;
         case 'input.menu':
             // sendTextMessage(senderID, reply);
+
             break;
         default:
             // sendTextMessage(senderID, reply);
@@ -190,6 +191,8 @@ function handleActions(senderID, reply, action){
 
 
 function showMenu(recipientId) {
+
+    console.log("Iam in show menu")
 
     Food.find().then((food)=> {
         if(food){
@@ -211,7 +214,7 @@ function showMenu(recipientId) {
         };
 
         for (var i = 0; i < food.length; i++) {
-            console.log(food[i].name);
+            //console.log(food[i].name);
             messageData.message.attachment.payload.elements.push({
                 title: food[i].name,
                 subtitle: food[i].desc,
@@ -407,7 +410,6 @@ function updateAddress(recipientId, address){
 
 function placeOrder(recipientId, order){
     var myOrder = new userOrder({
-        _id: 'orderId',
         userId: recipientId,
         foodId: order.foodId,
         qty: order.qty,
