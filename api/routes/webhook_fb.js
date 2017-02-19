@@ -10,6 +10,7 @@ const
     apiai = require("apiai");
 
 var User = require('../models/userModel');
+var Food = require('../models/foodModel');
 
 // App Secret can be retrieved from the App Dashboard
 const APP_SECRET = (process.env.MESSENGER_APP_SECRET) ?
@@ -168,7 +169,7 @@ function showMenu(recipientId) {
         }
     };
 
-    for(var item in db.foods){
+    for(var item in Food){
         messageData.message.attachment.payload.elements.push({
           title : String,
           subtitle : String,
