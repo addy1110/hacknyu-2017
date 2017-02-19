@@ -162,55 +162,64 @@ function showMenu(recipientId) {
                 type: "template",
                 payload: {
                     template_type: "menu",
-                    elements: [{
-                        title: "Veggie Specialty Pizza",
-                        subtitle: "Broccoli, spinach, mushrooms, onions, peppers, and black olives with real cheese made from mozzarella and your choice of crust.",
-                        // item_url: "",
-                        image_url: "http://www.cicis.com/media/1143/pizza_adven_zestyveggie.png",
-                        buttons: [{
-                            "type":"postback",
-                            "title":"Select Item",
-                            "payload":110001
-                        }, {
-                            type: "postback",
-                            title: "Back",
-                            payload: "DEVELOPER_DEFINED_PAYLOAD",
-                        }],
-                    }, {
-                        title: "Chicken Tikka Masala",
-                        subtitle: "Boneless chicken marinated in herbs and spices, barbecued. Cooked with cream and almonds.",
-                        // item_url: "",
-                        image_url: "http://www.seriouseats.com/images/20120529-the-food-lab-chicken-tikka-masala-18.jpg",
-                        buttons: [{
-                            "type":"postback",
-                            "title":"Select Item",
-                            "payload":110002
-                        }, {
-                            type: "postback",
-                            title: "Back",
-                            payload: "DEVELOPER_DEFINED_PAYLOAD",
-                        }],
-                    }, {
-                        title: "Malai Kofta",
-                        subtitle: "Vegetable ball cooked with coconut cream sauce.",
-                        // item_url: "",
-                        image_url: "https://usercontent2.hubstatic.com/8082401_f1024.jpg",
-                        buttons: [{
-                            "type":"postback",
-                            "title":"Select Item",
-                            "payload":110003
-                        }, {
-                            type: "postback",
-                            title: "Back",
-                            payload: "DEVELOPER_DEFINED_PAYLOAD",
-                        }],
-                    }]
+                    elements: []
                 }
             }
         }
     };
 
+    for(var item in db.foods){
+        messageData.message.attachment.payload.elements.push({
+          title : String,
+          subtitle : String,
+          image_url : String,
+          buttons: [{
+              "type":"postback",
+              "title":"Select Item",
+              "payload":110003
+          }, {
+              type: "postback",
+              title: "Back",
+              payload: "DEVELOPER_DEFINED_PAYLOAD",
+          }]
+
+
+        })
+    }
+
     callSendAPI(messageData);
+}
+
+function getQuantity(recipientId){
+    var messageData = {
+        recipient: {
+            id: recipientId
+        },
+        message: {
+            attachment: {
+                type: "template",
+                payload: {
+                    template_type: "quantity",
+                    elements: []
+                }
+            }
+        }
+    };
+
+    for (var i=1; i<11; i++) {
+        messageData.message.attachment.payload.elements.push({
+            title: i,
+            buttons: [{
+                "type": "postback",
+                "title": "Select",
+                "payload": "SELECT_FOOD_" + i
+            }]
+        });
+
+    }
+
+    callSendAPI(messageData);
+
 }
 
 function sendTextMessage(recipientId, messageText) {
