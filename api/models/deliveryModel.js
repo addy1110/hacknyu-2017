@@ -7,8 +7,7 @@ var mongoose = require('mongoose') ,
 var deliveryModel = Schema({
     id: String, //user Id
     zip: Number,
-    city: String,
-    state: String
+    address: String
 });
 
 module.exports = mongoose.model('Delivery', deliveryModel);
