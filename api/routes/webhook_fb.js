@@ -100,6 +100,8 @@ function receivedMessage(event) {
         senderID, recipientID, timeOfMessage);
     console.log(JSON.stringify(message));
 
+
+
     var isEcho = message.is_echo;
     var messageId = message.mid;
     var appId = message.app_id;
@@ -157,6 +159,76 @@ function receivedMessage(event) {
     }).catch(err => {
         console.log("Error whil checking user and session: "+err);
     });
+}
+
+function showMenu(recipientId) {
+    var messageData = {
+        recipient: {
+            id: recipientId
+        },
+        message: {
+            attachment: {
+                type: "template",
+                payload: {
+                    template_type: "menu",
+                    elements: []
+                }
+            }
+        }
+    };
+
+    for(var item in db.foods){
+        messageData.message.attachment.payload.elements.push({
+          title : String,
+          subtitle : String,
+          image_url : String,
+          buttons: [{
+              "type":"postback",
+              "title":"Select Item",
+              "payload":110003
+          }, {
+              type: "postback",
+              title: "Back",
+              payload: "DEVELOPER_DEFINED_PAYLOAD",
+          }]
+
+
+        })
+    }
+
+    callSendAPI(messageData);
+}
+
+function getQuantity(recipientId){
+    var messageData = {
+        recipient: {
+            id: recipientId
+        },
+        message: {
+            attachment: {
+                type: "template",
+                payload: {
+                    template_type: "quantity",
+                    elements: []
+                }
+            }
+        }
+    };
+
+    for (var i=1; i<11; i++) {
+        messageData.message.attachment.payload.elements.push({
+            title: i,
+            buttons: [{
+                "type": "postback",
+                "title": "Select",
+                "payload": "SELECT_FOOD_" + i
+            }]
+        });
+
+    }
+
+    callSendAPI(messageData);
+
 }
 
 function sendTextMessage(recipientId, messageText) {

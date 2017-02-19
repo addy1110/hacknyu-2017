@@ -12,6 +12,7 @@ mongoose.Promise = Promise;
 
 // Models
 var Color = require('./models/colorModel');
+var Food = require('./models/foodModel');
 
 // Routers
 var index = require('./routes/index');
