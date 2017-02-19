@@ -161,43 +161,53 @@ function receivedMessage(event) {
         console.log("Error whil checking user and session: "+err);
     });
 }
-
+showMenu();
 function showMenu(recipientId) {
-    var messageData = {
-        recipient: {
-            id: recipientId
-        },
-        message: {
-            attachment: {
-                type: "template",
-                payload: {
-                    template_type: "menu",
-                    elements: []
+
+    Food.find().then((food)=> {
+        if(food){
+
+
+        var messageData = {
+            recipient: {
+                id: recipientId
+            },
+            message: {
+                attachment: {
+                    type: "template",
+                    payload: {
+                        template_type: "menu",
+                        elements: []
+                    }
                 }
             }
+        };
+
+        for (var i = 0; i < food.length; i++) {
+            console.log(food[i].name);
+            messageData.message.attachment.payload.elements.push({
+                title: food[i].name,
+                subtitle: food[i].desc,
+                image_url: food[i].img,
+                buttons: [{
+                    "type": "postback",
+                    "title": "Select Item",
+                    "payload": food[i]._id
+                }, {
+                    type: "postback",
+                    title: "Back",
+                    payload: "DEVELOPER_DEFINED_PAYLOAD",
+                }]
+
+
+            })
         }
-    };
 
-    for(var item in Food){
-        messageData.message.attachment.payload.elements.push({
-          title : String,
-          subtitle : String,
-          image_url : String,
-          buttons: [{
-              "type":"postback",
-              "title":"Select Item",
-              "payload":110003
-          }, {
-              type: "postback",
-              title: "Back",
-              payload: "DEVELOPER_DEFINED_PAYLOAD",
-          }]
+        callSendAPI(messageData);
 
-
-        })
     }
-
-    callSendAPI(messageData);
+    else console.log("Food does not exists");
+    });
 }
 
 function getQuantity(recipientId){
