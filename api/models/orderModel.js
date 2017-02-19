@@ -8,11 +8,13 @@ var mongoose = require('mongoose') ,
 var orderModel = Schema({
     _id: String, // Order Id
     userId: String,
-    foodId: String,
-    qty: Number,
-    date: String,
-    total: Number // Final Amount
-
+    listItems: Array,
+    total: Number
 });
 
 module.exports = mongoose.model('Order', orderModel);
+
+// foodId: String,
+//     qty: Number,
+//     date: String,
+//     total: Number // Final Amount
