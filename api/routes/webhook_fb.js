@@ -15,6 +15,14 @@ var Food = require('../models/foodModel');
 var deliveryLocation = require('../models/deliveryModel');
 var userOrder = require('../models/orderModel');
 
+var order = {
+    _id: String, // Order Id
+    userId: String,
+    foodId: String,
+    qty: Number,
+    date: String,
+    total: Number // Final Amount
+};
 
 // App Secret can be retrieved from the App Dashboard
 const APP_SECRET = (process.env.MESSENGER_APP_SECRET) ?
@@ -159,18 +167,80 @@ function receivedMessage(event) {
     }).then(repos => {
         console.log(repos);
         console.log(senderID);
-        sendTextMessage(senderID, repos.result.fulfillment.speech);
+        console.log(repos.result.action);
+        console.log(repos.result.parameters.address);
+        if(repos.result.action == 'input.location'){
+
+            if(repos.result.parameters.address && repos.result.parameters.zipcode){
+                console.log(repos.result.parameters.address);
+                console.log(repos.result.parameters.zipcode);
+                updateAddress(senderID, repos.result.parameters.address, repos.result.parameters.zipcode);
+            }
+        }
+
+        if(repos.result.action == 'input.food' && repos.result.parameters.quantity){
+            order.qty = repos.result.parameters.quantity;
+            order.total = order.foodId.price * order.qty;
+        }
+        // console.log(repos.result.fulfillment.speech);
+        // sendTextMessage(senderID, repos.result.fulfillment.speech);
+        handleActions(recipientID,senderID, repos.result.fulfillment.speech, repos.result.action);
     }).catch(err => {
         console.log("Error whil checking user and session: "+err);
     });
 }
 
+
+function handleActions(recipientID, senderID, reply, action){
+    console.log("ACTIONOOOON: "+action);
+    switch(action) {
+        case 'input.welcome':
+            //sendGifMessage(senderID, "https://scontent.xx.fbcdn.net/v/t34.0-12/16729922_1575661999127760_804082988_n.gif?oh=f9029a8dac28bcae0b923cef4f0c0aee&oe=58ABF7CB");
+            sendTextMessage(senderID, reply);
+            break;
+        case 'input.location':
+            sendTextMessage(senderID, reply);
+            showMenu(senderID);
+            break;
+        case 'input.menu':
+            //sendTextMessage(senderID, reply);
+            break;
+        case 'input.food':
+            sendTextMessage(senderID, reply);
+            //getQuantity(recipientID, senderID);
+            break;
+        case 'input.confirm':
+            sendTextMessage(senderID, reply);
+            showReceipt(senderID);
+            break;
+        case 'input.add':
+            showMenu(senderID);
+            break;
+        case 'input.added':
+            sendTextMessage(senderID, reply);
+            break;
+        case 'input.checkout':
+            placeOrder(senderID);
+            break;
+        case 'input.cancel':
+            //set all values to null and delete order from db
+            break;
+        case 'input.updateLocation':
+            //update location
+            break;
+        default:
+            sendTextMessage(senderID, reply);
+    }
+}
+
 function showMenu(recipientId) {
+
+    console.log("Iam in show menu");
 
     Food.find().then((food)=> {
         if(food){
 
-
+        console.log("Food is available");
         var messageData = {
             recipient: {
                 id: recipientId
@@ -179,7 +249,7 @@ function showMenu(recipientId) {
                 attachment: {
                     type: "template",
                     payload: {
-                        template_type: "menu",
+                        template_type: "generic",
                         elements: []
                     }
                 }
@@ -195,10 +265,10 @@ function showMenu(recipientId) {
                 buttons: [{
                     "type": "postback",
                     "title": "Select Item",
-                    "payload": food[i]._id
+                    "payload": "1 "+food[i]._id
                 }, {
                     type: "postback",
-                    title: "Back",
+                    title: "$"+food[i].price,
                     payload: "DEVELOPER_DEFINED_PAYLOAD",
                 }]
 
@@ -206,23 +276,117 @@ function showMenu(recipientId) {
             })
         }
 
-        callSendAPI(messageData);
+    callSendAPI(messageData);
 
     }
     else console.log("Food does not exists");
     });
 }
 
-function getQuantity(recipientId){
+function showReceipt(recipientID) {
+    var userName = null,
+        orderId = 0,
+        timeStamp = null,
+        addr = {},
+        total = 0;
+
+    console.log("In Receipt");
+
+    User.findOne({_id: recipientID}).then((user) => {
+       if(user){
+           userName=user.name
+       }
+    }).then((data) =>{
+        userOrder.find({userId: recipientID}).then((order) => {
+            orderId = order._id;
+            timeStamp = order.date;
+            total = order.amt;
+        }).then((user)=>{
+            deliveryLocation.find({id: recipientID}.then((loc)=>{
+                addr = {
+                    zip: loc.zip,
+                    state : loc.state,
+                    city: loc.city
+                }
+            }))
+        })
+    }).then((response) =>{
+        console.log(uname);
+        console.log(orderId);
+        console.log(timeStamp);
+        console.log(addr);
+        console.log(total);
+
+        /*var messageData = {
+            recipient: {
+                id: recipientId
+            },
+            "message": {
+                "attachment": {
+                    "type": "template",
+                    "payload": {
+                        "template_type": "receipt",
+                        "recipient_name": uname,
+                        "order_number": orderId ,
+                        "currency": "USD",
+                        "payment_method": "Visa 2345",
+                        // "order_url": "http://petersapparel.parseapp.com/order?order_id=123456",
+                        "timestamp": timeStamp,
+                        "elements": [],
+                        "address": {
+                            "street_1": "1 Hacker Way",
+                            "street_2": "",
+                            "city": "Menlo Park",
+                            "postal_code": "94025",
+                            "state": "CA",
+                            "country": "US"
+                        },
+                        "summary": {
+                            "subtotal": 75.00,
+                            "shipping_cost": 4.95,
+                            "total_tax": 6.19,
+                            "total_cost": 56.14
+                        },
+                        "adjustments": [
+                            {
+                                "name": "New Customer Discount",
+                                "amount": 20
+                            },
+                            {
+                                "name": "$10 Off Coupon",
+                                "amount": 10
+                            }
+                        ]
+                    }
+                }
+            }
+        };
+
+        for(var item in Order){
+            messageData.message.attachment.payload.elements.push({
+                "title": "Classic White T-Shirt",
+                "subtitle": "100% Soft and Luxurious Cotton",
+                "quantity": 2,
+                "price": 50,
+                "currency": "USD",
+                "image_url": "http://petersapparel.parseapp.com/img/whiteshirt.png"
+            })
+        }*/
+
+        callSendAPI(messageData);
+    });
+}
+
+function getQuantity(recipientID, senderID){
     var messageData = {
         recipient: {
-            id: recipientId
+            id: recipientID
         },
         message: {
             attachment: {
                 type: "template",
                 payload: {
-                    template_type: "quantity",
+                    template_type: "generic",
                     elements: []
                 }
             }
@@ -235,7 +399,7 @@ function getQuantity(recipientId){
             buttons: [{
                 "type": "postback",
                 "title": "Select",
-                "payload": "SELECT_FOOD_" + i
+                "payload": "2 " + i
             }]
         });
 
@@ -259,6 +423,39 @@ function sendTextMessage(recipientId, messageText) {
     callSendAPI(messageData);
 }
 
+function queryAPI(recipientID, senderID,queryMsg){
+    User.findOne({_id: recipientID}).then((user) => {
+        if(user !== null) {
+            return user;
+        }
+    }).then(user => {
+        if (queryMsg) {
+            var options = {
+                uri:  'https://api.api.ai/v1/query',
+                qs: {
+                    'v': '20150910',
+                    'query': queryMsg,
+                    'lang': 'en',
+                    'sessionId': user.session._id
+                },
+                headers: {
+                    'Authorization': 'Bearer '+APIAI_ACCESS_TOKEN_CLIENT
+                },
+                json: true
+            };
+
+            return requestPromise(options);
+        }
+    }).then(repos => {
+        console.log(repos);
+        console.log(repos.result.action);
+        sendTextMessage(senderID, repos.result.fulfillment.speech);
+    }).catch(err => {
+        console.log("Error whil checking user and session: "+err);
+    });
+
+}
+
 function receivedPostback(event) {
     var senderID = event.sender.id;
     var recipientID = event.recipient.id;
@@ -267,15 +464,18 @@ function receivedPostback(event) {
     // The 'payload' param is a developer-defined field which is set in a postback
     // button for Structured Messages.
     var payload = event.postback.payload;
+    console.log(payload);
 
-    switch (payload) {
-        case 'GET_STARTED_BUTTON':
-            sendTextMessage(senderID, "Hello. I am YumYum BOT");
-            sendQuickReply(senderID);
-            break;
-        default:
-            sendTextMessage(senderID, "I could not understand Postback");
+    order.userId = senderID;
+    if(payload.split(" ")[0] == "1"){
+        console.log(payload.split(" ")[1]);
+        order.foodId = payload.split(" ")[1];
+        queryAPI(recipientID,senderID, "selected");
 
+    }
+    else if(payload.split(" ")[0] == "2"){
+        console.log(payload.split(" ")[1]);
+        order.qty = payload.split(" ")[1];
     }
 
     console.log("Received postback for user %d and page %d with payload '%s' " +
@@ -304,12 +504,12 @@ function sendGifMessage(recipientId) {
     callSendAPI(messageData);
 }
 
-function updateAddress(recipientId, address){
+function updateAddress(recipientId, addr, zipcode){
     var location = new deliveryLocation({
         id: recipientId,
-        zip: address.zip,
-        city: address.city,
-        state: address.state
+        zip: zipcode,
+        address: addr
+
     });
 
     location.save(function (err, item) {
@@ -320,12 +520,14 @@ function updateAddress(recipientId, address){
     //send confirmation to user
 }
 
-function placeOrder(recipientId, order){
+function placeOrder(recipientId){
+    var date = new Date();
+    var getDatetime = Math.floor(date.getTime()/1000);
     var myOrder = new userOrder({
-        _id: 'orderId',
         userId: recipientId,
         foodId: order.foodId,
         qty: order.qty,
+        date: getDatetime,
         total: order.foodId.price * (order.qty)
     });
 
@@ -334,6 +536,7 @@ function placeOrder(recipientId, order){
         console.log("Order placed successfully");
     });
 
+    sendTextMessage(recipientId,"Your order has been placed.");
     //send confirmation to user
 }
 
@@ -373,7 +576,6 @@ function sendQuickReply(recipientId) {
 
     callSendAPI(messageData);
 }
-
 
 function callSendAPI(messageData) {
     request({
