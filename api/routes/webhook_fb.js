@@ -432,10 +432,13 @@ function updateAddress(recipientId, address){
 }
 
 function placeOrder(recipientId, order){
+    var date = new Date();
+    var getDatetime = Math.floor(d.getTime()/1000);
     var myOrder = new userOrder({
         userId: recipientId,
         foodId: order.foodId,
         qty: order.qty,
+        date: getDatetime,
         total: order.foodId.price * (order.qty)
     });
 

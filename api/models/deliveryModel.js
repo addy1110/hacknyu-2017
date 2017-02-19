@@ -5,7 +5,7 @@ var mongoose = require('mongoose') ,
     Schema = mongoose.Schema;
 
 var deliveryModel = Schema({
-    id: String,
+    id: String, //user Id
     zip: Number,
     city: String,
     state: String

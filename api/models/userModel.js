@@ -7,8 +7,8 @@ var mongoose = require('mongoose') ,
 var userModel = Schema({
     _id : String,
     session: {
-        _id: String,
-        current_stage: String
+        _id: String, //Session Id
+        currentStage: String
     }
 });
 

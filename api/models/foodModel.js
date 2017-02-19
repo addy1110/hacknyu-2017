@@ -5,9 +5,9 @@ var mongoose = require('mongoose') ,
     Schema = mongoose.Schema;
 
 var foodModel = Schema({
-    _id: Number,
+    _id: Number, // food Id
     name: String,
-    desc: String,
+    desc: String,  // Description
     restaurant: String,
     img: String,
     price: Number
