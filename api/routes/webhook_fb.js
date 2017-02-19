@@ -211,6 +211,16 @@ function handleActions(recipientID, senderID, reply, action){
             break;
         case 'input.confirm':
             sendTextMessage(senderID, reply);
+            showReceipt(senderID);
+            break;
+        case 'input.add':
+            showMenu(senderID);
+            break;
+        case 'input.added':
+            sendTextMessage(senderID, reply);
+            break;
+        case 'input.place':
+            placeOrder(senderID);
             break;
         default:
             sendTextMessage(senderID, reply);
@@ -268,18 +278,19 @@ function showMenu(recipientId) {
 }
 
 function showReceipt(recipientID) {
-    var uname = null,
+    var userName = null,
         orderId = 0,
         timeStamp = null,
         addr = {},
         total = 0;
 
+    console.log("In Receipt");
 
     User.findOne({_id: recipientID}).then((user) => {
        if(user){
-           uname=user.name
+           userName=user.name
        }
-    }).then((user) =>{
+    }).then((data) =>{
         userOrder.find({userId: recipientID}).then((order) => {
             orderId = order._id;
             timeStamp = order.date;
@@ -292,67 +303,72 @@ function showReceipt(recipientID) {
                     city: loc.city
                 }
             }))
-
         })
-    });
+    }).then((response) =>{
+        console.log(uname);
+        console.log(orderId);
+        console.log(timeStamp);
+        console.log(addr);
+        console.log(total);
 
-        var messageData = {
-        recipient: {
-            id: recipientId
-        },
-        "message": {
-            "attachment": {
-                "type": "template",
-                "payload": {
-                    "template_type": "receipt",
-                    "recipient_name": uname,
-                    "order_number": orderId ,
-                    "currency": "USD",
-                    "payment_method": "Visa 2345",
-                    // "order_url": "http://petersapparel.parseapp.com/order?order_id=123456",
-                    "timestamp": timeStamp,
-                    "elements": [],
-                    "address": {
-                        "street_1": "1 Hacker Way",
-                        "street_2": "",
-                        "city": "Menlo Park",
-                        "postal_code": "94025",
-                        "state": "CA",
-                        "country": "US"
-                    },
-                    "summary": {
-                        "subtotal": 75.00,
-                        "shipping_cost": 4.95,
-                        "total_tax": 6.19,
-                        "total_cost": 56.14
-                    },
-                    "adjustments": [
-                        {
-                            "name": "New Customer Discount",
-                            "amount": 20
+        /*var messageData = {
+            recipient: {
+                id: recipientId
+            },
+            "message": {
+                "attachment": {
+                    "type": "template",
+                    "payload": {
+                        "template_type": "receipt",
+                        "recipient_name": uname,
+                        "order_number": orderId ,
+                        "currency": "USD",
+                        "payment_method": "Visa 2345",
+                        // "order_url": "http://petersapparel.parseapp.com/order?order_id=123456",
+                        "timestamp": timeStamp,
+                        "elements": [],
+                        "address": {
+                            "street_1": "1 Hacker Way",
+                            "street_2": "",
+                            "city": "Menlo Park",
+                            "postal_code": "94025",
+                            "state": "CA",
+                            "country": "US"
                         },
-                        {
-                            "name": "$10 Off Coupon",
-                            "amount": 10
-                        }
-                    ]
+                        "summary": {
+                            "subtotal": 75.00,
+                            "shipping_cost": 4.95,
+                            "total_tax": 6.19,
+                            "total_cost": 56.14
+                        },
+                        "adjustments": [
+                            {
+                                "name": "New Customer Discount",
+                                "amount": 20
+                            },
+                            {
+                                "name": "$10 Off Coupon",
+                                "amount": 10
+                            }
+                        ]
+                    }
                 }
             }
-        }
-    };
+        };
 
-    for(var item in Order){
-        messageData.message.attachment.payload.elements.push({
-            "title": "Classic White T-Shirt",
-            "subtitle": "100% Soft and Luxurious Cotton",
-            "quantity": 2,
-            "price": 50,
-            "currency": "USD",
-            "image_url": "http://petersapparel.parseapp.com/img/whiteshirt.png"
-        })
-    }
+        for(var item in Order){
+            messageData.message.attachment.payload.elements.push({
+                "title": "Classic White T-Shirt",
+                "subtitle": "100% Soft and Luxurious Cotton",
+                "quantity": 2,
+                "price": 50,
+                "currency": "USD",
+                "image_url": "http://petersapparel.parseapp.com/img/whiteshirt.png"
+            })
+        }*/
 
-    callSendAPI(messageData);
+        callSendAPI(messageData);
+    });
 }
 
 function getQuantity(recipientID, senderID){
@@ -498,9 +514,9 @@ function updateAddress(recipientId, addr, zipcode){
     //send confirmation to user
 }
 
-function placeOrder(recipientId, order){
+function placeOrder(recipientId){
     var date = new Date();
-    var getDatetime = Math.floor(d.getTime()/1000);
+    var getDatetime = Math.floor(date.getTime()/1000);
     var myOrder = new userOrder({
         userId: recipientId,
         foodId: order.foodId,
@@ -514,6 +530,7 @@ function placeOrder(recipientId, order){
         console.log("Order placed successfully");
     });
 
+    sendTextMessage(recipientId,"Your order has been placed.");
     //send confirmation to user
 }
 
