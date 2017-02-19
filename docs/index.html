@@ -32,6 +32,7 @@ html, body, #map {
     function initialize() {
         directionsDisplay = new google.maps.DirectionsRenderer();
         var chicago =new google.maps.LatLng(40.691352,-73.991890);
+
         var mapOptions = {
             zoom: 7,
             center: chicago
@@ -45,20 +46,44 @@ html, body, #map {
 
     function calcRoute() {
         var start;
+        var id;
         //var start=new google.maps.LatLng(41.2,-73.986579);
 
         //console.log(start);
 if (navigator.geolocation) {
-
-  navigator.geolocation.getCurrentPosition(function(position) {
+var Option = {
+  enableHighAccuracy: true,
+  timeout: 5000,
+  maximumAge: 0
+};
+  id=navigator.geolocation.watchPosition(showPosition,error,Option);}
+        function error(err) {
+  console.warn('ERROR(' + err.code + '): ' + err.message);
+}
+        function showPosition(position) {
       var start = new google.maps.LatLng(position.coords.latitude,
               position.coords.longitude);
      // console.log( position.coords.latitude,temp.lat());
-     // console.log( position.coords.longitude,temp.lng());
+     // console.log( posit on.coords.longitude,temp.lng());
       //console.log(start);
 
 
-      var end=new google.maps.LatLng(40.691352,-73.991890);
+      var end=new google.maps.LatLng(41.2,-73.986579);
+      var url="https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins="+position.coords.latitude+","+position.coords.longitude+"&destinations=41.2,-73.986579&key=AIzaSyA0FsbFa9MJk8XYUoB_u7qnnIqotW9_9Kw";
+        var crd = position.coords;
+
+        if (end.lat() === crd.latitude && end.lng() === crd.longitude) {
+    console.log('Congratulations, you reached the target');
+    navigator.geolocation.clearWatch(id);
+  }
+     // var deferred = $q.defer();
+            $.get(url,
+                function (response) {
+
+                    console.log(response.rows[0].elements[0].duration.text,response.rows[0].elements[0].distance.text);
+                    //deferred.resolve(response);
+                });
+           // return deferred.promise;
     // Initialize the Google Maps API v3
 /*
 var startMarker = new google.maps.Marker({
@@ -87,12 +112,12 @@ var startMarker = new google.maps.Marker({
                 directionsDisplay.setMap(map);
             }
         });
-  });}
+  }}
 
 
 
 
-    }
+
    // initialize();
 
    google.maps.event.addDomListener(window, 'load', initialize);
@@ -101,4 +126,8 @@ google.maps.event.addDomListener(window, "load", mapLocation());
 
     </script>
 
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> 4a1e1a4da701444dfddc86be52361acce23f73c3

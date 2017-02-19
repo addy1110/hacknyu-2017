@@ -213,6 +213,94 @@ function showMenu(recipientId) {
     });
 }
 
+function showReceipt(recipientID) {
+    var uname = null,
+        orderId = 0,
+        timeStamp = null,
+        addr = {},
+        total = 0;
+
+
+    User.findOne({_id: recipientID}).then((user) => {
+       if(user){
+           uname=user.name
+       }
+    }).then((user) =>{
+        userOrder.find({userId: recipientID}).then((order) => {
+            orderId = order._id;
+            timeStamp = order.date;
+            total = order.amt;
+        }).then((user)=>{
+            deliveryLocation.find({id: recipientID}.then((loc)=>{
+                addr = {
+                    zip: loc.zip,
+                    state : loc.state,
+                    city: loc.city
+                }
+            }))
+
+        })
+    });
+
+        var messageData = {
+        recipient: {
+            id: recipientId
+        },
+        "message": {
+            "attachment": {
+                "type": "template",
+                "payload": {
+                    "template_type": "receipt",
+                    "recipient_name": uname,
+                    "order_number": orderId ,
+                    "currency": "USD",
+                    "payment_method": "Visa 2345",
+                    // "order_url": "http://petersapparel.parseapp.com/order?order_id=123456",
+                    "timestamp": timeStamp,
+                    "elements": [],
+                    "address": {
+                        "street_1": "1 Hacker Way",
+                        "street_2": "",
+                        "city": "Menlo Park",
+                        "postal_code": "94025",
+                        "state": "CA",
+                        "country": "US"
+                    },
+                    "summary": {
+                        "subtotal": 75.00,
+                        "shipping_cost": 4.95,
+                        "total_tax": 6.19,
+                        "total_cost": 56.14
+                    },
+                    "adjustments": [
+                        {
+                            "name": "New Customer Discount",
+                            "amount": 20
+                        },
+                        {
+                            "name": "$10 Off Coupon",
+                            "amount": 10
+                        }
+                    ]
+                }
+            }
+        }
+    };
+
+    for(var item in Order){
+        messageData.message.attachment.payload.elements.push({
+            "title": "Classic White T-Shirt",
+            "subtitle": "100% Soft and Luxurious Cotton",
+            "quantity": 2,
+            "price": 50,
+            "currency": "USD",
+            "image_url": "http://petersapparel.parseapp.com/img/whiteshirt.png"
+        })
+    }
+
+    callSendAPI(messageData);
+}
+
 function getQuantity(recipientId){
     var messageData = {
         recipient: {
