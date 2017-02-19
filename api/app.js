@@ -19,6 +19,7 @@ var index = require('./routes/index');
 var users = require('./routes/users');
 var webhookFB = require('./routes/webhook_fb');
 var mongoapi = require('./routes/mongoapi')(Color);
+var notify = require('./routes/notify');
 
 var app = express();
 
@@ -38,6 +39,7 @@ app.use('/', index);
 app.use('/users', users);
 app.use('/webhook/fb/', webhookFB);
 app.use('/mongo/', mongoapi);
+app.use('/notify', notify);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
