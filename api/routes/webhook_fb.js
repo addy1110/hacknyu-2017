@@ -161,7 +161,7 @@ function receivedMessage(event) {
         console.log("Error whil checking user and session: "+err);
     });
 }
-showMenu();
+
 function showMenu(recipientId) {
 
     Food.find().then((food)=> {
