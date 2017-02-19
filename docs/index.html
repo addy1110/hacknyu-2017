@@ -72,6 +72,7 @@ var Option = {
       var url="https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins="+position.coords.latitude+","+position.coords.longitude+"&destinations=41.2,-73.986579&key=AIzaSyA0FsbFa9MJk8XYUoB_u7qnnIqotW9_9Kw";
         var crd = position.coords;
 
+
         if (end.lat() === crd.latitude && end.lng() === crd.longitude) {
     console.log('Congratulations, you reached the target');
     navigator.geolocation.clearWatch(id);
@@ -81,6 +82,19 @@ var Option = {
                 function (response) {
 
                     console.log(response.rows[0].elements[0].duration.text,response.rows[0].elements[0].distance.text);
+                   $.ajax({
+            type: "POST",
+            url: "https://kvu6lr1k46b4dvzb.v1.p.beameio.net/notify",
+            dataType: "json",
+            data: response,
+            success: function (data) {
+               alert('Success');
+
+            },
+            error: function () {
+             alert('Error');
+            }
+        });
                     //deferred.resolve(response);
                 });
            // return deferred.promise;
