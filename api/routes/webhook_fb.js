@@ -49,8 +49,6 @@ const APIAI_ACCESS_TOKEN_CLIENT = (process.env.APIAI_ACCESS_TOKEN_CLIENTEN) ?
     (process.env.APIAI_ACCESS_TOKEN_CLIENTEN) :
     config.get('apiai.accessTokenClient');
 
-console.log("TOKEEEEEN: "+APIAI_ACCESS_TOKEN_CLIENT);
-
 if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN && SERVER_URL)) {
     console.error("Missing Facebook config values");
     process.exit(1);
@@ -137,14 +135,29 @@ function receivedMessage(event) {
         //     console.log("Received echo for message %s and app %d with metadata %s",
         //         messageId, appId, metadata);
         //     return;
-        // } else if (quickReply) {
-        //     var quickReplyPayload = quickReply.payload;
-        //     console.log("Quick reply for message %s with payload %s",
-        //         messageId, quickReplyPayload);
-        //
-        //     sendTextMessage(senderID, "Quick reply tapped");
-        //     return;
-        // }
+        // } else
+        if (quickReply) {
+            var patterDeliveryTime = new RegExp("^DELIVERY_TIME*");
+            var patterFoodQuantity = new RegExp("^FOOD_QUANTITY*");
+            var quickReplyPayload = quickReply.payload;
+            console.log("Quick reply for message %s with payload %s",
+                messageId, quickReplyPayload);
+
+            if(patterDeliveryTime.test(quickReplyPayload)){
+                queryAPI(recipientID,senderID, "12pm today");
+            } else if(patterFoodQuantity.test(quickReplyPayload)) {
+                queryAPI(recipientID,senderID, "1");
+            } else if(quickReplyPayload == 'CHECKOUT_BILL') {
+                queryAPI(recipientID,senderID, "billing");
+            } else if (quickReplyPayload == 'ORDER_MORE_FOOD') {
+                queryAPI(recipientID,senderID, "add more");
+            } else {
+                handleActions(recipientID, senderID, null, quickReplyPayload);
+            }
+
+            // sendTextMessage(senderID, "Quick reply tapped");
+            return;
+        }
 
         if (messageText) {
 
@@ -190,12 +203,64 @@ function receivedMessage(event) {
     });
 }
 
+function receivedPostback(event) {
+    var senderID = event.sender.id;
+    var recipientID = event.recipient.id;
+    var timeOfPostback = event.timestamp;
+    // Regex for Payloads
+    var pattSelectFood = new RegExp("^SELECT_FOOD*");
+
+    // The 'payload' param is a developer-defined field which is set in a postback
+    // button for Structured Messages.
+    var payload = event.postback.payload;
+    console.log(payload);
+
+    if(pattSelectFood.test(payload)) {
+
+        queryAPI(recipientID,senderID, "Selected");
+
+    } else if(payload == 'DEVELOPER_DEFINED_PAYLOAD' ) {
+        return
+    } else {
+        handleActions(recipientID, senderID, null , payload);
+    }
+
+    console.log("Received postback for user %d and page %d with payload '%s' " +
+        "at %d", senderID, recipientID, payload, timeOfPostback);
+
+    // When a postback is called, we'll send a message back to the sender to
+    // let them know it was successful
+    // sendTextMessage(senderID, "Postback called");
+}
+
 
 function handleActions(recipientID, senderID, reply, action){
     console.log("ACTIONOOOON: "+action);
     switch(action) {
+        case 'GET_STARTED_BUTTON':
+            sendGifMessage(senderID, 'http://i.makeagif.com/media/2-19-2017/-mnfAt.gif');
+            // sendTextMessage(senderID,"You are too close to getting some yummy food. Can I have your address please?");
+            setTimeout(function() {
+                sendQuickReply(senderID,'I am Yum Yum Bot! I deliver the happiness packed in food boxes directly to you. Just choose your favourite meal from the list of delicious options we provide you and we promise you will enjoy your food right at the time you want  and at the nearest pickup location to you. Would you like start ordering yumyum food?', [
+                    {
+                        "content_type":"text",
+                        "title":"NO 👎",
+                        "payload":"QUICK_REPLY_GET_STARTED_NO"
+                    },
+                    {
+                        "content_type":"text",
+                        "title":"YES 👍",
+                        "payload":"QUICK_REPLY_GET_STARTED_YES"
+                    }
+                ]);
+            }, 1000);
+
+            break;
+        case 'QUICK_REPLY_GET_STARTED_YES':
+            queryAPI(recipientID, senderID, 'hi');
+            break;
         case 'input.welcome':
-            //sendGifMessage(senderID, "https://scontent.xx.fbcdn.net/v/t34.0-12/16729922_1575661999127760_804082988_n.gif?oh=f9029a8dac28bcae0b923cef4f0c0aee&oe=58ABF7CB");
+            // sendGifMessage(senderID, 'http://i.makeagif.com/media/2-19-2017/-mnfAt.gif');
             sendTextMessage(senderID, reply);
             break;
         case 'input.location':
@@ -206,14 +271,72 @@ function handleActions(recipientID, senderID, reply, action){
             //sendTextMessage(senderID, reply);
             break;
         case 'input.food':
-            sendTextMessage(senderID, reply);
+            // sendTextMessage(senderID, reply);
+            User.findOne({_id: senderID}).then((user) => {
+                if(user.session.current_stage == 'input.food')      {
+
+                }
+            });
+
+            sendQuickReply(senderID, reply, [
+                {
+                    "content_type":"text",
+                    "title":"Today 01:00 pm",
+                    "payload":"DELIVERY_TIME_TODAY_1"
+                },
+                {
+                    "content_type":"text",
+                    "title":"Tomorrow 12:00 pm",
+                    "payload":"DELIVERY_TIME_TOMORROW_12"
+                }
+            ]);
             //getQuantity(recipientID, senderID);
+            break;
+        case 'input.quantity':
+
+            sendQuickReply(senderID, reply, [
+                {
+                    "content_type":"text",
+                    "title":"Order More",
+                    "payload":"ORDER_MORE_FOOD"
+                },
+                {
+                    "content_type":"text",
+                    "title":"Checkout",
+                    "payload":"CHECKOUT_BILL"
+                }
+            ]);
+
+            // sendQuickReply(senderID, reply, [
+            //     {
+            //         "content_type":"text",
+            //         "title":"1",
+            //         "payload":"FOOD_QUANTITY_1"
+            //     },
+            //     {
+            //         "content_type":"text",
+            //         "title":"2",
+            //         "payload":"FOOD_QUANTITY_2"
+            //     },
+            //     {
+            //         "content_type":"text",
+            //         "title":"3",
+            //         "payload":"FOOD_QUANTITY_3"
+            //     },
+            //     {
+            //         "content_type":"text",
+            //         "title":"4",
+            //         "payload":"FOOD_QUANTITY_4"
+            //     }
+            // ]);
             break;
         case 'input.confirm':
             sendTextMessage(senderID, reply);
+
             showReceipt(senderID);
             break;
         case 'input.add':
+            sendTextMessage(senderID, reply);
             showMenu(senderID);
             break;
         case 'input.added':
@@ -264,8 +387,8 @@ function showMenu(recipientId) {
                 image_url: food[i].img,
                 buttons: [{
                     "type": "postback",
-                    "title": "Select Item",
-                    "payload": "1 "+food[i]._id
+                    "title": "Select",
+                    "payload": "SELECT_FOOD_"+food[i]._id
                 }, {
                     type: "postback",
                     title: "$"+food[i].price,
@@ -284,77 +407,89 @@ function showMenu(recipientId) {
 }
 
 function showReceipt(recipientID) {
-    var userName = null,
-        orderId = 0,
-        timeStamp = null,
-        addr = {},
-        total = 0;
+    // var userName = null,
+    //     orderId = 0,
+    //     timeStamp = null,
+    //     addr = {},
+    //     total = 0;
+    //
+    // console.log("In Receipt");
+    //
+    // User.findOne({_id: recipientID}).then((user) => {
+    //    if(user){
+    //        userName=user.name
+    //    }
+    // }).then((data) =>{
+    //     userOrder.find({userId: recipientID}).then((order) => {
+    //         orderId = order._id;
+    //         timeStamp = order.date;
+    //         total = order.amt;
+    //     }).then((user)=>{
+    //         deliveryLocation.find({id: recipientID}.then((loc)=>{
+    //             addr = {
+    //                 zip: loc.zip,
+    //                 state : loc.state,
+    //                 city: loc.city
+    //             }
+    //         }))
+    //     })
+    // }).then((response) =>{
+    //     console.log(uname);
+    //     console.log(orderId);
+    //     console.log(timeStamp);
+    //     console.log(addr);
+    //     console.log(total);
 
-    console.log("In Receipt");
-
-    User.findOne({_id: recipientID}).then((user) => {
-       if(user){
-           userName=user.name
-       }
-    }).then((data) =>{
-        userOrder.find({userId: recipientID}).then((order) => {
-            orderId = order._id;
-            timeStamp = order.date;
-            total = order.amt;
-        }).then((user)=>{
-            deliveryLocation.find({id: recipientID}.then((loc)=>{
-                addr = {
-                    zip: loc.zip,
-                    state : loc.state,
-                    city: loc.city
-                }
-            }))
-        })
-    }).then((response) =>{
-        console.log(uname);
-        console.log(orderId);
-        console.log(timeStamp);
-        console.log(addr);
-        console.log(total);
-
-        /*var messageData = {
+        var messageData = {
             recipient: {
-                id: recipientId
+                id: recipientID
             },
             "message": {
-                "attachment": {
-                    "type": "template",
-                    "payload": {
-                        "template_type": "receipt",
-                        "recipient_name": uname,
-                        "order_number": orderId ,
-                        "currency": "USD",
-                        "payment_method": "Visa 2345",
-                        // "order_url": "http://petersapparel.parseapp.com/order?order_id=123456",
-                        "timestamp": timeStamp,
-                        "elements": [],
-                        "address": {
-                            "street_1": "1 Hacker Way",
-                            "street_2": "",
-                            "city": "Menlo Park",
-                            "postal_code": "94025",
-                            "state": "CA",
-                            "country": "US"
-                        },
-                        "summary": {
-                            "subtotal": 75.00,
-                            "shipping_cost": 4.95,
-                            "total_tax": 6.19,
-                            "total_cost": 56.14
-                        },
-                        "adjustments": [
+                "attachment":{
+                    "type":"template",
+                    "payload":{
+                        "template_type":"receipt",
+                        "recipient_name":"Stephane Crozatier",
+                        "order_number":"12345678902",
+                        "currency":"USD",
+                        "payment_method":"Visa 2345",
+                        "order_url":"http://petersapparel.parseapp.com/order?order_id=123456",
+                        "timestamp":"1428444852",
+                        "elements":[
                             {
-                                "name": "New Customer Discount",
-                                "amount": 20
+                                "title":"Chicken Tikka Masala",
+                                "subtitle":"Boneless chicken marinated in herbs and spices, barbecued. Cooked with cream and almonds.",
+                                "quantity":1,
+                                "price":12.95,
+                                "currency":"USD",
+                                "image_url":"http://www.seriouseats.com/images/20120529-the-food-lab-chicken-tikka-masala-18.jpg"
                             },
                             {
-                                "name": "$10 Off Coupon",
-                                "amount": 10
+                                "title":"Seafood Combination Special",
+                                "subtitle":"Fish, crab stick, jumbo shrimp and scallops.",
+                                "quantity":1,
+                                "price":7.25,
+                                "currency":"USD",
+                                "image_url":"http://www.seriouseats.com/assets_c/2014/05/20140428-panfried-noodles-seafood-18-thumb-625xauto-400119.jpg"
+                            }
+                        ],"address":{
+                            "street_1":"1 Hacker Way",
+                            "street_2":"",
+                            "city":"Menlo Park",
+                            "postal_code":"94025",
+                            "state":"CA",
+                            "country":"US"
+                        },
+                        "summary":{
+                            "subtotal":20.20,
+                            "shipping_cost": 1.00,
+                            "total_tax":2.1,
+                            "total_cost":22.30
+                        },
+                        "adjustments":[
+                            {
+                                "name":"New Customer Discount",
+                                "amount":20
                             }
                         ]
                     }
@@ -362,19 +497,19 @@ function showReceipt(recipientID) {
             }
         };
 
-        for(var item in Order){
-            messageData.message.attachment.payload.elements.push({
-                "title": "Classic White T-Shirt",
-                "subtitle": "100% Soft and Luxurious Cotton",
-                "quantity": 2,
-                "price": 50,
-                "currency": "USD",
-                "image_url": "http://petersapparel.parseapp.com/img/whiteshirt.png"
-            })
-        }*/
+        // for(var item in Order){
+        //     messageData.message.attachment.payload.elements.push({
+        //         "title": "Classic White T-Shirt",
+        //         "subtitle": "100% Soft and Luxurious Cotton",
+        //         "quantity": 2,
+        //         "price": 50,
+        //         "currency": "USD",
+        //         "image_url": "http://petersapparel.parseapp.com/img/whiteshirt.png"
+        //     })
+        // }
 
         callSendAPI(messageData);
-    });
+    // });
 }
 
 function getQuantity(recipientID, senderID){
@@ -449,44 +584,15 @@ function queryAPI(recipientID, senderID,queryMsg){
     }).then(repos => {
         console.log(repos);
         console.log(repos.result.action);
-        sendTextMessage(senderID, repos.result.fulfillment.speech);
+        handleActions(recipientID, senderID, repos.result.fulfillment.speech, repos.result.action)
+        // sendTextMessage(senderID, repos.result.fulfillment.speech);
     }).catch(err => {
         console.log("Error whil checking user and session: "+err);
     });
 
 }
 
-function receivedPostback(event) {
-    var senderID = event.sender.id;
-    var recipientID = event.recipient.id;
-    var timeOfPostback = event.timestamp;
-
-    // The 'payload' param is a developer-defined field which is set in a postback
-    // button for Structured Messages.
-    var payload = event.postback.payload;
-    console.log(payload);
-
-    order.userId = senderID;
-    if(payload.split(" ")[0] == "1"){
-        console.log(payload.split(" ")[1]);
-        order.foodId = payload.split(" ")[1];
-        queryAPI(recipientID,senderID, "selected");
-
-    }
-    else if(payload.split(" ")[0] == "2"){
-        console.log(payload.split(" ")[1]);
-        order.qty = payload.split(" ")[1];
-    }
-
-    console.log("Received postback for user %d and page %d with payload '%s' " +
-        "at %d", senderID, recipientID, payload, timeOfPostback);
-
-    // When a postback is called, we'll send a message back to the sender to
-    // let them know it was successful
-    // sendTextMessage(senderID, "Postback called");
-}
-
-function sendGifMessage(recipientId) {
+function sendGifMessage(recipientId, url) {
     var messageData = {
         recipient: {
             id: recipientId
@@ -495,7 +601,7 @@ function sendGifMessage(recipientId) {
             attachment: {
                 type: "image",
                 payload: {
-                    url: SERVER_URL + "/assets/instagram_logo.gif"
+                    url: url
                 }
             }
         }
@@ -557,20 +663,14 @@ function updateUserStage(recipientId, sessionId, currentUserStage){
     //post updatetion if needed
 }
 
-function sendQuickReply(recipientId) {
+function sendQuickReply(recipientId, text, replies) {
     var messageData = {
         recipient: {
             id: recipientId
         },
         message: {
-            text: "Whould you like to order a food?",
-            quick_replies: [
-                {
-                    "content_type":"text",
-                    "title":"Menu",
-                    "payload":"QUICK_REPLY_MENU"
-                }
-            ]
+            text: text,
+            quick_replies: replies
         }
     };
 
