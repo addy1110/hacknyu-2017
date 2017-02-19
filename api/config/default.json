@@ -1,8 +1,11 @@
 {
   "fb" : {
-    "appSecret": "",
-    "validationToken": "",
-    "pageAccessToken": "",
-    "serverURL": ""
+    "appSecret": "6fefb57c46d342355d91dd338dff02ed",
+    "validationToken": "yam_yam_bot_be196990-3a78-4d92-88dd-25c36ccecb0c",
+    "pageAccessToken": "EAAKeNlFRgJYBAKUuIT1Gbpw7T5oVEO4JViKAHZAa8lBwlsTAXyZCEchExuTFpz13OsmgDgjZCLa5cEL3gfwsANX3uPaHue1jZAaUjVoZAgHJbXXKZCy7Abc7qKU7MfT49PKZBfxictKOE4Ys3yA677vIxysaC6T8v8aK7R5dUmZBrwZDZD",
+    "serverURL": "https://kvu6lr1k46b4dvzb.v1.p.beameio.net/"
+  },
+  "apiai" : {
+    "accessTokenClient" : "ff761e5aaef64b388864a70d83ad3148"
   }
 }

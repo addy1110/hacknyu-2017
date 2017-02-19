@@ -6,7 +6,7 @@ var mongoose = require('mongoose') ,
     Schema = mongoose.Schema;
 
 var orderModel = Schema({
-    _id:string
+    _id:string,
     userid:string,
     locationid:string,
     foodid:string,

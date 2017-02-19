@@ -7,9 +7,11 @@ const
     config = require('config'),
     request = require('request'),
     uuidV4 = require('uuid/v4'),
-    apiai = require("apiai");
+    apiai = require("apiai"),
+    requestPromise = require('request-promise');
 
 var User = require('../models/userModel');
+var Food = require('../models/foodModel');
 
 // App Secret can be retrieved from the App Dashboard
 const APP_SECRET = (process.env.MESSENGER_APP_SECRET) ?
@@ -36,12 +38,14 @@ const APIAI_ACCESS_TOKEN_CLIENT = (process.env.APIAI_ACCESS_TOKEN_CLIENTEN) ?
     (process.env.APIAI_ACCESS_TOKEN_CLIENTEN) :
     config.get('apiai.accessTokenClient');
 
+console.log("TOKEEEEEN: "+APIAI_ACCESS_TOKEN_CLIENT);
+
 if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN && SERVER_URL)) {
     console.error("Missing Facebook config values");
     process.exit(1);
 }
 
-var nlp = apiai(APIAI_ACCESS_TOKEN_CLIENT);
+// var nlp = apiai(APIAI_ACCESS_TOKEN_CLIENT);
 
 /* GET Facebook webhook. */
 router.get('/', function(req, res) {
@@ -132,21 +136,27 @@ function receivedMessage(event) {
         // }
 
         if (messageText) {
-            let options = {
-                sessionId: '89898989'
+
+            var options = {
+                uri:  'https://api.api.ai/v1/query',
+                qs: {
+                    'v': '20150910',
+                    'query': messageText,
+                    'lang': 'en',
+                    'sessionId': user.session._id
+                },
+                headers: {
+                    'Authorization': 'Bearer '+APIAI_ACCESS_TOKEN_CLIENT
+                },
+                json: true
             };
 
-            console.log(messageText);
-            var requetNLP =  nlp.textRequest('Hello', options);
-            requetNLP.on('response', (response) => {
-                console.log("RESPONSE AI: "+response)
-                sendTextMessage(senderID, "HELLLLLL");
-            });
-
-            requetNLP.on('error', function(error) {
-                console.log(error);
-            });
+            return requestPromise(options);
         }
+    }).then(repos => {
+        console.log(repos);
+        console.log(senderID);
+        sendTextMessage(senderID, repos.result.fulfillment.speech);
     }).catch(err => {
         console.log("Error whil checking user and session: "+err);
     });
@@ -162,55 +172,64 @@ function showMenu(recipientId) {
                 type: "template",
                 payload: {
                     template_type: "menu",
-                    elements: [{
-                        title: "Veggie Specialty Pizza",
-                        subtitle: "Broccoli, spinach, mushrooms, onions, peppers, and black olives with real cheese made from mozzarella and your choice of crust.",
-                        // item_url: "",
-                        image_url: "http://www.cicis.com/media/1143/pizza_adven_zestyveggie.png",
-                        buttons: [{
-                            "type":"postback",
-                            "title":"Select Item",
-                            "payload":110001
-                        }, {
-                            type: "postback",
-                            title: "Back",
-                            payload: "DEVELOPER_DEFINED_PAYLOAD",
-                        }],
-                    }, {
-                        title: "Chicken Tikka Masala",
-                        subtitle: "Boneless chicken marinated in herbs and spices, barbecued. Cooked with cream and almonds.",
-                        // item_url: "",
-                        image_url: "http://www.seriouseats.com/images/20120529-the-food-lab-chicken-tikka-masala-18.jpg",
-                        buttons: [{
-                            "type":"postback",
-                            "title":"Select Item",
-                            "payload":110002
-                        }, {
-                            type: "postback",
-                            title: "Back",
-                            payload: "DEVELOPER_DEFINED_PAYLOAD",
-                        }],
-                    }, {
-                        title: "Malai Kofta",
-                        subtitle: "Vegetable ball cooked with coconut cream sauce.",
-                        // item_url: "",
-                        image_url: "https://usercontent2.hubstatic.com/8082401_f1024.jpg",
-                        buttons: [{
-                            "type":"postback",
-                            "title":"Select Item",
-                            "payload":110003
-                        }, {
-                            type: "postback",
-                            title: "Back",
-                            payload: "DEVELOPER_DEFINED_PAYLOAD",
-                        }],
-                    }]
+                    elements: []
                 }
             }
         }
     };
 
+    for(var item in Food){
+        messageData.message.attachment.payload.elements.push({
+          title : String,
+          subtitle : String,
+          image_url : String,
+          buttons: [{
+              "type":"postback",
+              "title":"Select Item",
+              "payload":110003
+          }, {
+              type: "postback",
+              title: "Back",
+              payload: "DEVELOPER_DEFINED_PAYLOAD",
+          }]
+
+
+        })
+    }
+
     callSendAPI(messageData);
+}
+
+function getQuantity(recipientId){
+    var messageData = {
+        recipient: {
+            id: recipientId
+        },
+        message: {
+            attachment: {
+                type: "template",
+                payload: {
+                    template_type: "quantity",
+                    elements: []
+                }
+            }
+        }
+    };
+
+    for (var i=1; i<11; i++) {
+        messageData.message.attachment.payload.elements.push({
+            title: i,
+            buttons: [{
+                "type": "postback",
+                "title": "Select",
+                "payload": "SELECT_FOOD_" + i
+            }]
+        });
+
+    }
+
+    callSendAPI(messageData);
+
 }
 
 function sendTextMessage(recipientId, messageText) {
@@ -321,6 +340,5 @@ function callSendAPI(messageData) {
 function createUser(recipientID) {
     return new User({_id: recipientID, session : {_id: uuidV4(), current_stage: 'input.welcome'}});
 }
-
 
 module.exports = router;
