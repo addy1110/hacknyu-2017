@@ -125,14 +125,15 @@ function receivedMessage(event) {
         //     console.log("Received echo for message %s and app %d with metadata %s",
         //         messageId, appId, metadata);
         //     return;
-        // } else if (quickReply) {
-        //     var quickReplyPayload = quickReply.payload;
-        //     console.log("Quick reply for message %s with payload %s",
-        //         messageId, quickReplyPayload);
-        //
-        //     sendTextMessage(senderID, "Quick reply tapped");
-        //     return;
-        // }
+        // } else
+        if (quickReply) {
+            var quickReplyPayload = quickReply.payload;
+            console.log("Quick reply for message %s with payload %s",
+                messageId, quickReplyPayload);
+
+            sendTextMessage(senderID, "Quick reply tapped");
+            return;
+        }
 
         if (messageText) {
 
@@ -153,48 +154,76 @@ function receivedMessage(event) {
             return requestPromise(options);
         }
     }).then(repos => {
-        console.log(repos);
-        console.log(senderID);
-        sendTextMessage(senderID, repos.result.fulfillment.speech);
+
+        for(var i =0 ; i< repos.result.contexts.length; i++ ) {
+            console.log(repos.result.contexts[i]);
+        }
+
+        handleActions(senderID, repos.result.fulfillment.speech, repos.result.action);
     }).catch(err => {
         console.log("Error whil checking user and session: "+err);
     });
 }
 
-function showMenu(recipientId) {
+function handleActions(senderID, reply, action){
+    console.log("ACTIONOOOON: "+action);
+    switch(action) {
+        case 'input.welcome':
+            sendGifMessage(senderID, "https://scontent.xx.fbcdn.net/v/t34.0-12/16729922_1575661999127760_804082988_n.gif?oh=f9029a8dac28bcae0b923cef4f0c0aee&oe=58ABF7CB");
+            sendTextMessage(senderID, reply);
+            break;
+        case 'input.location':
+            // sendTextMessage(senderID, reply);
+            // showMenu(senderID);
+            break;
+        case 'input.menu':
+            // sendTextMessage(senderID, reply);
+            break;
+        default:
+            // sendTextMessage(senderID, reply);
+    }
+}
+
+
+function showMenu(senderID) {
     var messageData = {
         recipient: {
-            id: recipientId
+            id: senderID
         },
         message: {
             attachment: {
                 type: "template",
                 payload: {
                     template_type: "menu",
-                    elements: []
+                    elements: [
+                        {
+                            "title":"Welcome to Peter\'s Hats",
+                            "image_url":"https://petersfancybrownhats.com/company_image.png",
+                            "subtitle":"We\'ve got the right hat for everyone.",
+                            "default_action": {
+                                "type": "web_url",
+                                "url": "https://peterssendreceiveapp.ngrok.io/view?item=103",
+                                "messenger_extensions": true,
+                                "webview_height_ratio": "tall",
+                                "fallback_url": "https://peterssendreceiveapp.ngrok.io/"
+                            },
+                            "buttons":[
+                                {
+                                    "type":"web_url",
+                                    "url":"https://petersfancybrownhats.com",
+                                    "title":"View Website"
+                                },{
+                                    "type":"postback",
+                                    "title":"Start Chatting",
+                                    "payload":"DEVELOPER_DEFINED_PAYLOAD"
+                                }
+                            ]
+                        }
+                    ]
                 }
             }
         }
     };
-
-    for(var item in db.foods){
-        messageData.message.attachment.payload.elements.push({
-          title : String,
-          subtitle : String,
-          image_url : String,
-          buttons: [{
-              "type":"postback",
-              "title":"Select Item",
-              "payload":110003
-          }, {
-              type: "postback",
-              title: "Back",
-              payload: "DEVELOPER_DEFINED_PAYLOAD",
-          }]
-
-
-        })
-    }
 
     callSendAPI(messageData);
 }
@@ -272,7 +301,7 @@ function receivedPostback(event) {
     // sendTextMessage(senderID, "Postback called");
 }
 
-function sendGifMessage(recipientId) {
+function sendGifMessage(recipientId, url) {
     var messageData = {
         recipient: {
             id: recipientId
@@ -281,7 +310,7 @@ function sendGifMessage(recipientId) {
             attachment: {
                 type: "image",
                 payload: {
-                    url: SERVER_URL + "/assets/instagram_logo.gif"
+                    url: url
                 }
             }
         }
