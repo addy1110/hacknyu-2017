@@ -6,11 +6,12 @@ var mongoose = require('mongoose') ,
     Schema = mongoose.Schema;
 
 var orderModel = Schema({
-    _id: String,
+    _id: String, // Order Id
     userId: String,
     foodId: String,
     qty: Number,
-    total: Number
+    date: String,
+    total: Number // Final Amount
 
 });
 
