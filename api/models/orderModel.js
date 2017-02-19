@@ -10,6 +10,7 @@ var orderModel = Schema({
     userid:string,
     locationid:string,
     foodid:string,
+    deliverytime:string,
     quantity:number
 
 });
