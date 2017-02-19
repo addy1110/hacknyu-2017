@@ -6,7 +6,8 @@ const
     router = express.Router(),
     config = require('config'),
     request = require('request'),
-    uuidV4 = require('uuid/v4');
+    uuidV4 = require('uuid/v4'),
+    apiai = require("apiai");
 
 var User = require('../models/userModel');
 
@@ -31,10 +32,16 @@ const SERVER_URL = (process.env.SERVER_URL) ?
     (process.env.SERVER_URL) :
     config.get('fb.serverURL');
 
+const APIAI_ACCESS_TOKEN_CLIENT = (process.env.APIAI_ACCESS_TOKEN_CLIENTEN) ?
+    (process.env.APIAI_ACCESS_TOKEN_CLIENTEN) :
+    config.get('apiai.accessTokenClient');
+
 if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN && SERVER_URL)) {
     console.error("Missing Facebook config values");
     process.exit(1);
 }
+
+var nlp = apiai(APIAI_ACCESS_TOKEN_CLIENT);
 
 /* GET Facebook webhook. */
 router.get('/', function(req, res) {
@@ -110,22 +117,35 @@ function receivedMessage(event) {
            return createUser(recipientID).save();
         }
     }).then(user => {
-        if (isEcho) {
-            // Just logging message echoes to console
-            console.log("Received echo for message %s and app %d with metadata %s",
-                messageId, appId, metadata);
-            return;
-        } else if (quickReply) {
-            var quickReplyPayload = quickReply.payload;
-            console.log("Quick reply for message %s with payload %s",
-                messageId, quickReplyPayload);
-
-            sendTextMessage(senderID, "Quick reply tapped");
-            return;
-        }
+        // if (isEcho) {
+        //     // Just logging message echoes to console
+        //     console.log("Received echo for message %s and app %d with metadata %s",
+        //         messageId, appId, metadata);
+        //     return;
+        // } else if (quickReply) {
+        //     var quickReplyPayload = quickReply.payload;
+        //     console.log("Quick reply for message %s with payload %s",
+        //         messageId, quickReplyPayload);
+        //
+        //     sendTextMessage(senderID, "Quick reply tapped");
+        //     return;
+        // }
 
         if (messageText) {
-            sendTextMessage(senderID, messageText);
+            let options = {
+                sessionId: '89898989'
+            };
+
+            console.log(messageText);
+            var requetNLP =  nlp.textRequest('Hello', options);
+            requetNLP.on('response', (response) => {
+                console.log("RESPONSE AI: "+response)
+                sendTextMessage(senderID, "HELLLLLL");
+            });
+
+            requetNLP.on('error', function(error) {
+                console.log(error);
+            });
         }
     }).catch(err => {
         console.log("Error whil checking user and session: "+err);
