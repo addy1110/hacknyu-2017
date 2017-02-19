@@ -11,6 +11,10 @@ const
     requestPromise = require('request-promise');
 
 var User = require('../models/userModel');
+var Food = require('../models/foodModel');
+var deliveryLocation = require('../models/deliveryModel');
+var userOrder = require('../models/orderModel');
+
 
 // App Secret can be retrieved from the App Dashboard
 const APP_SECRET = (process.env.MESSENGER_APP_SECRET) ?
@@ -185,45 +189,111 @@ function handleActions(senderID, reply, action){
 }
 
 
-function showMenu(senderID) {
+function showMenu(recipientId) {
+
+    Food.find().then((food)=> {
+        if(food){
+
+
+        var messageData = {
+            recipient: {
+                id: recipientId
+            },
+            message: {
+                attachment: {
+                    type: "template",
+                    payload: {
+                        template_type: "menu",
+                        elements: []
+                    }
+                }
+            }
+        };
+
+        for (var i = 0; i < food.length; i++) {
+            console.log(food[i].name);
+            messageData.message.attachment.payload.elements.push({
+                title: food[i].name,
+                subtitle: food[i].desc,
+                image_url: food[i].img,
+                buttons: [{
+                    "type": "postback",
+                    "title": "Select Item",
+                    "payload": food[i]._id
+                }, {
+                    type: "postback",
+                    title: "Back",
+                    payload: "DEVELOPER_DEFINED_PAYLOAD",
+                }]
+
+
+            })
+        }
+
+        callSendAPI(messageData);
+
+    }
+    else console.log("Food does not exists");
+    });
+}
+
+function showReceipt(recipientID) {
+
     var messageData = {
         recipient: {
             id: senderID
         },
-        message: {
-            attachment: {
-                type: "template",
-                payload: {
-                    template_type: "menu",
-                    elements: [
+        "message": {
+            "attachment": {
+                "type": "template",
+                "payload": {
+                    "template_type": "receipt",
+                    "recipient_name": "Stephane Crozatier",
+                    "order_number": "12345678902",
+                    "currency": "USD",
+                    "payment_method": "Visa 2345",
+                    // "order_url": "http://petersapparel.parseapp.com/order?order_id=123456",
+                    "timestamp": "1428444852",
+                    "elements": [],
+                    "address": {
+                        "street_1": "1 Hacker Way",
+                        "street_2": "",
+                        "city": "Menlo Park",
+                        "postal_code": "94025",
+                        "state": "CA",
+                        "country": "US"
+                    },
+                    "summary": {
+                        "subtotal": 75.00,
+                        "shipping_cost": 4.95,
+                        "total_tax": 6.19,
+                        "total_cost": 56.14
+                    },
+                    "adjustments": [
                         {
-                            "title":"Welcome to Peter\'s Hats",
-                            "image_url":"https://petersfancybrownhats.com/company_image.png",
-                            "subtitle":"We\'ve got the right hat for everyone.",
-                            "default_action": {
-                                "type": "web_url",
-                                "url": "https://peterssendreceiveapp.ngrok.io/view?item=103",
-                                "messenger_extensions": true,
-                                "webview_height_ratio": "tall",
-                                "fallback_url": "https://peterssendreceiveapp.ngrok.io/"
-                            },
-                            "buttons":[
-                                {
-                                    "type":"web_url",
-                                    "url":"https://petersfancybrownhats.com",
-                                    "title":"View Website"
-                                },{
-                                    "type":"postback",
-                                    "title":"Start Chatting",
-                                    "payload":"DEVELOPER_DEFINED_PAYLOAD"
-                                }
-                            ]
-                        }
+                            "name": "New Customer Discount",
+                            "amount": 20
+                        },
+                        {
+                            "name": "$10 Off Coupon",
+                            "amount": 10
+                }
                     ]
                 }
             }
         }
     };
+
+    for(var item in Order){
+        messageData.message.attachment.payload.elements.push({
+            "title": "Classic White T-Shirt",
+            "subtitle": "100% Soft and Luxurious Cotton",
+            "quantity": 2,
+            "price": 50,
+            "currency": "USD",
+            "image_url": "http://petersapparel.parseapp.com/img/whiteshirt.png"
+        })
+    }
 
     callSendAPI(messageData);
 }
@@ -317,6 +387,56 @@ function sendGifMessage(recipientId, url) {
     };
 
     callSendAPI(messageData);
+}
+
+function updateAddress(recipientId, address){
+    var location = new deliveryLocation({
+        id: recipientId,
+        zip: address.zip,
+        city: address.city,
+        state: address.state
+    });
+
+    location.save(function (err, item) {
+        if (err) return console.error(err);
+        console.log("address inserted successfully");
+    });
+
+    //send confirmation to user
+}
+
+function placeOrder(recipientId, order){
+    var myOrder = new userOrder({
+        _id: 'orderId',
+        userId: recipientId,
+        foodId: order.foodId,
+        qty: order.qty,
+        total: order.foodId.price * (order.qty)
+    });
+
+    myOrder.save(function (err, item) {
+        if (err) return console.error(err);
+        console.log("Order placed successfully");
+    });
+
+    //send confirmation to user
+}
+
+function updateUserStage(recipientId, sessionId, currentUserStage){
+    var userStage = new User({
+        _id : recipientId,
+        session: {
+            _id: sessionId,
+            currentStage: currentUserStage
+        }
+    });
+
+    userStage.save(function (err, item) {
+        if (err) return console.error(err);
+        console.log("User Stage successfully updated");
+    });
+
+    //post updatetion if needed
 }
 
 function sendQuickReply(recipientId) {
