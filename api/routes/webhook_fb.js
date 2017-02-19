@@ -6,7 +6,8 @@ const
     router = express.Router(),
     config = require('config'),
     request = require('request'),
-    uuidV4 = require('uuid/v4');
+    uuidV4 = require('uuid/v4'),
+    apiai = require("apiai");
 
 var User = require('../models/userModel');
 
@@ -31,10 +32,16 @@ const SERVER_URL = (process.env.SERVER_URL) ?
     (process.env.SERVER_URL) :
     config.get('fb.serverURL');
 
+const APIAI_ACCESS_TOKEN_CLIENT = (process.env.APIAI_ACCESS_TOKEN_CLIENTEN) ?
+    (process.env.APIAI_ACCESS_TOKEN_CLIENTEN) :
+    config.get('apiai.accessTokenClient');
+
 if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN && SERVER_URL)) {
     console.error("Missing Facebook config values");
     process.exit(1);
 }
+
+var nlp = apiai(APIAI_ACCESS_TOKEN_CLIENT);
 
 /* GET Facebook webhook. */
 router.get('/', function(req, res) {
@@ -90,6 +97,8 @@ function receivedMessage(event) {
         senderID, recipientID, timeOfMessage);
     console.log(JSON.stringify(message));
 
+
+
     var isEcho = message.is_echo;
     var messageId = message.mid;
     var appId = message.app_id;
@@ -108,26 +117,100 @@ function receivedMessage(event) {
            return createUser(recipientID).save();
         }
     }).then(user => {
-        if (isEcho) {
-            // Just logging message echoes to console
-            console.log("Received echo for message %s and app %d with metadata %s",
-                messageId, appId, metadata);
-            return;
-        } else if (quickReply) {
-            var quickReplyPayload = quickReply.payload;
-            console.log("Quick reply for message %s with payload %s",
-                messageId, quickReplyPayload);
-
-            sendTextMessage(senderID, "Quick reply tapped");
-            return;
-        }
+        // if (isEcho) {
+        //     // Just logging message echoes to console
+        //     console.log("Received echo for message %s and app %d with metadata %s",
+        //         messageId, appId, metadata);
+        //     return;
+        // } else if (quickReply) {
+        //     var quickReplyPayload = quickReply.payload;
+        //     console.log("Quick reply for message %s with payload %s",
+        //         messageId, quickReplyPayload);
+        //
+        //     sendTextMessage(senderID, "Quick reply tapped");
+        //     return;
+        // }
 
         if (messageText) {
-            sendTextMessage(senderID, messageText);
+            let options = {
+                sessionId: '89898989'
+            };
+
+            console.log(messageText);
+            var requetNLP =  nlp.textRequest('Hello', options);
+            requetNLP.on('response', (response) => {
+                console.log("RESPONSE AI: "+response)
+                sendTextMessage(senderID, "HELLLLLL");
+            });
+
+            requetNLP.on('error', function(error) {
+                console.log(error);
+            });
         }
     }).catch(err => {
         console.log("Error whil checking user and session: "+err);
     });
+}
+
+function showMenu(recipientId) {
+    var messageData = {
+        recipient: {
+            id: recipientId
+        },
+        message: {
+            attachment: {
+                type: "template",
+                payload: {
+                    template_type: "menu",
+                    elements: [{
+                        title: "Veggie Specialty Pizza",
+                        subtitle: "Broccoli, spinach, mushrooms, onions, peppers, and black olives with real cheese made from mozzarella and your choice of crust.",
+                        // item_url: "",
+                        image_url: "http://www.cicis.com/media/1143/pizza_adven_zestyveggie.png",
+                        buttons: [{
+                            "type":"postback",
+                            "title":"Select Item",
+                            "payload":110001
+                        }, {
+                            type: "postback",
+                            title: "Back",
+                            payload: "DEVELOPER_DEFINED_PAYLOAD",
+                        }],
+                    }, {
+                        title: "Chicken Tikka Masala",
+                        subtitle: "Boneless chicken marinated in herbs and spices, barbecued. Cooked with cream and almonds.",
+                        // item_url: "",
+                        image_url: "http://www.seriouseats.com/images/20120529-the-food-lab-chicken-tikka-masala-18.jpg",
+                        buttons: [{
+                            "type":"postback",
+                            "title":"Select Item",
+                            "payload":110002
+                        }, {
+                            type: "postback",
+                            title: "Back",
+                            payload: "DEVELOPER_DEFINED_PAYLOAD",
+                        }],
+                    }, {
+                        title: "Malai Kofta",
+                        subtitle: "Vegetable ball cooked with coconut cream sauce.",
+                        // item_url: "",
+                        image_url: "https://usercontent2.hubstatic.com/8082401_f1024.jpg",
+                        buttons: [{
+                            "type":"postback",
+                            "title":"Select Item",
+                            "payload":110003
+                        }, {
+                            type: "postback",
+                            title: "Back",
+                            payload: "DEVELOPER_DEFINED_PAYLOAD",
+                        }],
+                    }]
+                }
+            }
+        }
+    };
+
+    callSendAPI(messageData);
 }
 
 function sendTextMessage(recipientId, messageText) {
