@@ -219,8 +219,14 @@ function handleActions(recipientID, senderID, reply, action){
         case 'input.added':
             sendTextMessage(senderID, reply);
             break;
-        case 'input.place':
+        case 'input.checkout':
             placeOrder(senderID);
+            break;
+        case 'input.cancel':
+            //set all values to null and delete order from db
+            break;
+        case 'input.updateLocation':
+            //update location
             break;
         default:
             sendTextMessage(senderID, reply);
