@@ -129,15 +129,14 @@ function receivedMessage(event) {
         //     console.log("Received echo for message %s and app %d with metadata %s",
         //         messageId, appId, metadata);
         //     return;
-        // } else
-        if (quickReply) {
-            var quickReplyPayload = quickReply.payload;
-            console.log("Quick reply for message %s with payload %s",
-                messageId, quickReplyPayload);
-
-            sendTextMessage(senderID, "Quick reply tapped");
-            return;
-        }
+        // } else if (quickReply) {
+        //     var quickReplyPayload = quickReply.payload;
+        //     console.log("Quick reply for message %s with payload %s",
+        //         messageId, quickReplyPayload);
+        //
+        //     sendTextMessage(senderID, "Quick reply tapped");
+        //     return;
+        // }
 
         if (messageText) {
 
@@ -158,16 +157,14 @@ function receivedMessage(event) {
             return requestPromise(options);
         }
     }).then(repos => {
-
-        for(var i =0 ; i< repos.result.contexts.length; i++ ) {
-            console.log(repos.result.contexts[i]);
-        }
-
-        handleActions(senderID, repos.result.fulfillment.speech, repos.result.action);
+        console.log(repos);
+        console.log(senderID);
+        sendTextMessage(senderID, repos.result.fulfillment.speech);
     }).catch(err => {
         console.log("Error whil checking user and session: "+err);
     });
 }
+
 
 function handleActions(senderID, reply, action){
     console.log("ACTIONOOOON: "+action);
@@ -188,7 +185,6 @@ function handleActions(senderID, reply, action){
             // sendTextMessage(senderID, reply);
     }
 }
-
 
 function showMenu(recipientId) {
 
@@ -241,22 +237,49 @@ function showMenu(recipientId) {
 }
 
 function showReceipt(recipientID) {
+    var uname = null,
+        orderId = 0,
+        timeStamp = null,
+        addr = {},
+        total = 0;
 
-    var messageData = {
+
+    User.findOne({_id: recipientID}).then((user) => {
+       if(user){
+           uname=user.name
+       }
+    }).then((user) =>{
+        userOrder.find({userId: recipientID}).then((order) => {
+            orderId = order._id;
+            timeStamp = order.date;
+            total = order.amt;
+        }).then((user)=>{
+            deliveryLocation.find({id: recipientID}.then((loc)=>{
+                addr = {
+                    zip: loc.zip,
+                    state : loc.state,
+                    city: loc.city
+                }
+            }))
+
+        })
+    });
+
+        var messageData = {
         recipient: {
-            id: senderID
+            id: recipientId
         },
         "message": {
             "attachment": {
                 "type": "template",
                 "payload": {
                     "template_type": "receipt",
-                    "recipient_name": "Stephane Crozatier",
-                    "order_number": "12345678902",
+                    "recipient_name": uname,
+                    "order_number": orderId ,
                     "currency": "USD",
                     "payment_method": "Visa 2345",
                     // "order_url": "http://petersapparel.parseapp.com/order?order_id=123456",
-                    "timestamp": "1428444852",
+                    "timestamp": timeStamp,
                     "elements": [],
                     "address": {
                         "street_1": "1 Hacker Way",
@@ -280,7 +303,7 @@ function showReceipt(recipientID) {
                         {
                             "name": "$10 Off Coupon",
                             "amount": 10
-                }
+                        }
                     ]
                 }
             }
@@ -374,7 +397,7 @@ function receivedPostback(event) {
     // sendTextMessage(senderID, "Postback called");
 }
 
-function sendGifMessage(recipientId, url) {
+function sendGifMessage(recipientId) {
     var messageData = {
         recipient: {
             id: recipientId
@@ -383,7 +406,7 @@ function sendGifMessage(recipientId, url) {
             attachment: {
                 type: "image",
                 payload: {
-                    url: url
+                    url: SERVER_URL + "/assets/instagram_logo.gif"
                 }
             }
         }
