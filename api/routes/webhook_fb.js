@@ -7,7 +7,8 @@ const
     config = require('config'),
     request = require('request'),
     uuidV4 = require('uuid/v4'),
-    apiai = require("apiai");
+    apiai = require("apiai"),
+    requestPromise = require('request-promise');
 
 var User = require('../models/userModel');
 
@@ -36,12 +37,14 @@ const APIAI_ACCESS_TOKEN_CLIENT = (process.env.APIAI_ACCESS_TOKEN_CLIENTEN) ?
     (process.env.APIAI_ACCESS_TOKEN_CLIENTEN) :
     config.get('apiai.accessTokenClient');
 
+console.log("TOKEEEEEN: "+APIAI_ACCESS_TOKEN_CLIENT);
+
 if (!(APP_SECRET && VALIDATION_TOKEN && PAGE_ACCESS_TOKEN && SERVER_URL)) {
     console.error("Missing Facebook config values");
     process.exit(1);
 }
 
-var nlp = apiai(APIAI_ACCESS_TOKEN_CLIENT);
+// var nlp = apiai(APIAI_ACCESS_TOKEN_CLIENT);
 
 /* GET Facebook webhook. */
 router.get('/', function(req, res) {
@@ -130,21 +133,27 @@ function receivedMessage(event) {
         // }
 
         if (messageText) {
-            let options = {
-                sessionId: '89898989'
+
+            var options = {
+                uri:  'https://api.api.ai/v1/query',
+                qs: {
+                    'v': '20150910',
+                    'query': messageText,
+                    'lang': 'en',
+                    'sessionId': user.session._id
+                },
+                headers: {
+                    'Authorization': 'Bearer '+APIAI_ACCESS_TOKEN_CLIENT
+                },
+                json: true
             };
 
-            console.log(messageText);
-            var requetNLP =  nlp.textRequest('Hello', options);
-            requetNLP.on('response', (response) => {
-                console.log("RESPONSE AI: "+response)
-                sendTextMessage(senderID, "HELLLLLL");
-            });
-
-            requetNLP.on('error', function(error) {
-                console.log(error);
-            });
+            return requestPromise(options);
         }
+    }).then(repos => {
+        console.log(repos);
+        console.log(senderID);
+        sendTextMessage(senderID, repos.result.fulfillment.speech);
     }).catch(err => {
         console.log("Error whil checking user and session: "+err);
     });
@@ -258,6 +267,5 @@ function callSendAPI(messageData) {
 function createUser(recipientID) {
     return new User({_id: recipientID, session : {_id: uuidV4(), current_stage: 'input.welcome'}});
 }
-
 
 module.exports = router;
